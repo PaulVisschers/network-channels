@@ -1,0 +1,14 @@
+Name:                network-channels
+Version:             0.1
+Synopsis:            A collection of libraries that implement various channels.
+Category:            Control
+Author:              Paul Visschers
+Build-Type:          Simple
+Cabal-Version:       >=1.6.0.1
+Stability:           experimental
+
+
+Library
+  HS-Source-Dirs:    src
+  Build-Depends:     base >= 4, network
+  Exposed-Modules:   Network.Channel
