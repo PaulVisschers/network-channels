@@ -2,31 +2,51 @@ module Network.Channel where
 
 import GHC.IO.Handle
 import Network
+import Control.Concurrent.MVar
 import Control.Applicative
 
-data Channel a b = Channel Handle HostName PortNumber (Maybe Socket)
+data Channel a b = Channel (MVar Handle) (Maybe Socket)
 
 connectTo :: HostName -> PortNumber -> IO (Channel a b)
 connectTo hostName portNumber = do
   handle <- Network.connectTo hostName (PortNumber portNumber)
   hSetBuffering handle LineBuffering
-  return (Channel handle hostName portNumber Nothing)
+  hvar <- newMVar handle
+  return (Channel hvar Nothing)
 
 acceptOn :: PortNumber -> IO (Channel a b)
 acceptOn portNumber = withSocketsDo $ do
   socket <- listenOn (PortNumber portNumber)
-  (handle, hostName, portNumber) <- accept socket
+  (handle, _, _) <- accept socket
   hSetBuffering handle LineBuffering
-  return (Channel handle hostName portNumber (Just socket))
+  hvar <- newMVar handle
+  return (Channel hvar (Just socket))
 
 close :: Channel a b -> IO ()
-close (Channel _ _ _ msocket) = maybe (return ()) sClose msocket
+close (Channel hvar msocket) = do
+  handle <- takeMVar hvar
+  hClose handle
+  maybe (return ()) sClose msocket
 
 send :: Show a => a -> Channel a b -> IO ()
-send x (Channel handle _ _ _) = hPutStr handle (show x ++ "\n")
+send x = withChannel $ \h -> hPutStr h (show x ++ "\n")
 
 receive :: Read b => Channel a b -> IO b
-receive (Channel handle _ _ _) = read <$> hGetLine handle
+receive = withChannel $ \h -> read <$> hGetLine h
 
 isEmpty :: Channel a b -> IO Bool
-isEmpty (Channel handle _ _ _) = not <$> hWaitForInput handle 0
+isEmpty = withChannel $ \h -> hWaitForInput h 0
+
+tryReceive :: Read b => Channel a b -> IO (Maybe b)
+tryReceive = withChannel $ \h -> do
+  b <- hWaitForInput h 0
+  if b
+    then Just . read <$> hGetLine h
+    else return Nothing
+  
+withChannel :: (Handle -> IO c) -> Channel a b -> IO c
+withChannel f (Channel hvar _) = do
+  h <- takeMVar hvar
+  x <- f h
+  putMVar hvar h
+  return x
