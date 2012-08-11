@@ -24,11 +24,11 @@ receive :: Read a => Channel a b -> IO a
 receive = withChannel $ \h -> read <$> hGetLine h
 
 isEmpty :: Channel a b -> IO Bool
-isEmpty = withChannel $ \h -> not <$> hWaitForInput h 0
+isEmpty = withChannel $ \h -> not <$> hReady h
 
 tryReceive :: Read a => Channel a b -> IO (Maybe a)
 tryReceive = withChannel $ \h -> do
-  b <- not <$> hWaitForInput h 0
+  b <- not <$> hReady h
   if b
     then return Nothing
     else Just . read <$> hGetLine h
