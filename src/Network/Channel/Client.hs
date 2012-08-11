@@ -17,16 +17,16 @@ connect hostName portNumber = do
 close :: Channel a b -> IO ()
 close = withChannel hClose
 
-send :: Show a => a -> Channel a b -> IO ()
+send :: Show b => b -> Channel a b -> IO ()
 send x = withChannel $ \h -> hPutStr h (show x ++ "\n")
 
-receive :: Read b => Channel a b -> IO b
+receive :: Read a => Channel a b -> IO a
 receive = withChannel $ \h -> read <$> hGetLine h
 
 isEmpty :: Channel a b -> IO Bool
 isEmpty = withChannel $ \h -> not <$> hWaitForInput h 0
 
-tryReceive :: Read b => Channel a b -> IO (Maybe b)
+tryReceive :: Read a => Channel a b -> IO (Maybe a)
 tryReceive = withChannel $ \h -> do
   b <- not <$> hWaitForInput h 0
   if b
