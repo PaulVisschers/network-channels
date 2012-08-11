@@ -21,17 +21,21 @@ send :: Show b => b -> Channel a b -> IO ()
 send x = withChannel $ \h -> hPutStr h (show x ++ "\n")
 
 receive :: Read a => Channel a b -> IO a
-receive = withChannel $ \h -> read <$> hGetLine h
+receive ch = do
+  mx <- tryReceive ch
+  case mx of
+    Nothing -> receive ch
+    Just x -> return x
 
 isEmpty :: Channel a b -> IO Bool
 isEmpty = withChannel $ \h -> not <$> hReady h
 
 tryReceive :: Read a => Channel a b -> IO (Maybe a)
 tryReceive = withChannel $ \h -> do
-  b <- not <$> hReady h
+  b <- hReady h
   if b
-    then return Nothing
-    else Just . read <$> hGetLine h
+    then Just . read <$> hGetLine h
+    else return Nothing
   
 withChannel :: (Handle -> IO c) -> Channel a b -> IO c
 withChannel f (Channel hvar) = do
