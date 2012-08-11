@@ -5,28 +5,17 @@ import Network
 import Control.Concurrent.MVar
 import Control.Applicative
 
-data Channel a b = Channel (MVar Handle) (Maybe Socket)
+data Channel a b = Channel (MVar Handle)
 
 connectTo :: HostName -> PortNumber -> IO (Channel a b)
 connectTo hostName portNumber = do
   handle <- Network.connectTo hostName (PortNumber portNumber)
   hSetBuffering handle LineBuffering
   hvar <- newMVar handle
-  return (Channel hvar Nothing)
-
-acceptOn :: PortNumber -> IO (Channel a b)
-acceptOn portNumber = withSocketsDo $ do
-  socket <- listenOn (PortNumber portNumber)
-  (handle, _, _) <- accept socket
-  hSetBuffering handle LineBuffering
-  hvar <- newMVar handle
-  return (Channel hvar (Just socket))
+  return (Channel hvar)
 
 close :: Channel a b -> IO ()
-close (Channel hvar msocket) = do
-  handle <- takeMVar hvar
-  hClose handle
-  maybe (return ()) sClose msocket
+close = withChannel hClose
 
 send :: Show a => a -> Channel a b -> IO ()
 send x = withChannel $ \h -> hPutStr h (show x ++ "\n")
@@ -45,7 +34,7 @@ tryReceive = withChannel $ \h -> do
     else Just . read <$> hGetLine h
   
 withChannel :: (Handle -> IO c) -> Channel a b -> IO c
-withChannel f (Channel hvar _) = do
+withChannel f (Channel hvar) = do
   h <- takeMVar hvar
   x <- f h
   putMVar hvar h
