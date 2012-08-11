@@ -1,6 +1,6 @@
 module Network.Channel.Client where
 
-import GHC.IO.Handle
+import System.IO
 import Network
 import Control.Concurrent.MVar
 import Control.Applicative
