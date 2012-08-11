@@ -7,9 +7,9 @@ import Control.Applicative
 
 data Channel a b = Channel (MVar Handle)
 
-connectTo :: HostName -> PortNumber -> IO (Channel a b)
-connectTo hostName portNumber = do
-  handle <- Network.connectTo hostName (PortNumber portNumber)
+connect :: HostName -> PortNumber -> IO (Channel a b)
+connect hostName portNumber = do
+  handle <- connectTo hostName (PortNumber portNumber)
   hSetBuffering handle LineBuffering
   hvar <- newMVar handle
   return (Channel hvar)
