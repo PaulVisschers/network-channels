@@ -8,24 +8,26 @@ module Network.Channel.Client (
 
 import System.IO
 import Network
+import Control.Concurrent.MVar
 import Control.Applicative
 
-data Channel a b = Channel Handle
+data Channel a b = Channel (MVar Handle)
 
 connect :: HostName -> PortNumber -> IO (Channel a b)
 connect hostName portNumber = do
   h <- connectTo hostName (PortNumber portNumber)
   hSetBuffering h LineBuffering
-  return (Channel h)
+  mvar <- newMVar h
+  return (Channel mvar)
 
 close :: Channel a b -> IO ()
-close (Channel h) = hClose h
+close = atomically hClose
 
 send :: Show b => b -> Channel a b -> IO ()
-send x (Channel h) = hPutStr h (show x ++ "\n")
+send x = atomically $ \h -> hPutStr h (show x ++ "\n")
 
 receive :: Read a => Channel a b -> IO [a]
-receive (Channel h) = receive' h where
+receive = atomically $ \h -> receive' h where
 
   receive' :: Read a => Handle -> IO [a]
   receive' h = do
@@ -36,3 +38,10 @@ receive (Channel h) = receive' h where
       return (x : xs)
     else do
       return []
+
+atomically :: (Handle -> IO c) -> Channel a b -> IO c
+atomically f (Channel mvar) = do
+  h <- takeMVar mvar
+  x <- f h
+  putMVar mvar h
+  return x
