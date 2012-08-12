@@ -10,7 +10,9 @@ Stability:           experimental
 
 Library
   HS-Source-Dirs:    src
-  Build-Depends:     base >= 4, network
+  Build-Depends:     base >= 4, network, containers
   Modules:           Network.Channel.Client
+                     Network.Channel.Server
                      Network.Channel.Raw
   Exposed-Modules:   Network.Channel.Client
+                     Network.Channel.Server
