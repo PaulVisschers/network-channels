@@ -1,6 +1,6 @@
 Name:                network-channels
 Version:             0.1
-Synopsis:            A collection of libraries that implement various channels.
+Synopsis:            A library that exposes channels for a server-client network connection.
 Category:            Control
 Author:              Paul Visschers
 Build-Type:          Simple
@@ -11,4 +11,6 @@ Stability:           experimental
 Library
   HS-Source-Dirs:    src
   Build-Depends:     base >= 4, network
+  Modules:           Network.Channel.Client
+                     Network.Channel.Raw
   Exposed-Modules:   Network.Channel.Client
