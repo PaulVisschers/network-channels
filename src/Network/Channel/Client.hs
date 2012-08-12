@@ -11,7 +11,7 @@ import Network
 import Control.Concurrent.MVar
 import Control.Applicative
 
-data Channel a b = Channel (MVar Handle)
+newtype Channel a b = Channel (MVar Handle)
 
 connect :: HostName -> PortNumber -> IO (Channel a b)
 connect hostName portNumber = do
