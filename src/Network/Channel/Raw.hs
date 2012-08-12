@@ -17,5 +17,5 @@ receive h = do
       x <- receiveOne h
       xs <- receive h
       return (x : xs)
-    else do
+    else
       return []
