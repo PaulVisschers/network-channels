@@ -1,4 +1,10 @@
-module Network.Channel.Client where
+module Network.Channel.Client (
+  Channel,
+  connect,
+  close,
+  send,
+  receive
+  ) where
 
 import System.IO
 import Network
@@ -18,18 +24,15 @@ close (Channel h) = hClose h
 send :: Show b => b -> Channel a b -> IO ()
 send x (Channel h) = hPutStr h (show x ++ "\n")
 
-receive :: Read a => Channel a b -> IO a
-receive (Channel h) = read <$> hGetLine h
+receive :: Read a => Channel a b -> IO [a]
+receive (Channel h) = receive' h where
 
-isEmpty :: Channel a b -> IO Bool
-isEmpty (Channel h) = not <$> hReady h
-
-receiveAll :: Read a => Channel a b -> IO [a]
-receiveAll ch = do
-  b <- isEmpty ch
-  if b then do
-    return []
-  else do
-    x <- receive ch
-    xs <- receiveAll ch
-    return (x : xs)
+  receive' :: Read a => Handle -> IO [a]
+  receive' h = do
+    b <- hReady h
+    if b then do
+      x <- read <$> hGetLine h
+      xs <- receive' h
+      return (x : xs)
+    else do
+      return []
