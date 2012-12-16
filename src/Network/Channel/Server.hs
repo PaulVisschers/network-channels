@@ -59,6 +59,7 @@ receive k = atomically $ \hs -> Raw.receive (hs Map.! k)
 
 receiveAll :: (Ord k, Read a) => Channel k a b -> IO (Map k [a])
 receiveAll = atomically $ \hs -> Map.fromList <$> mapM (\(k, h) -> (k,) <$> Raw.receive h) (Map.toList hs)
+-- TODO: Add detection of closed handles, and remove them from the handle map.
 
 atomically :: (Map k Handle -> IO c) -> Channel k a b -> IO c
 atomically f (Channel mvar) = do

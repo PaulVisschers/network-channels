@@ -12,7 +12,7 @@ receiveOne h = read <$> hGetLine h
 
 receive :: Read a => Handle -> IO [a]
 receive h = do
-    b <- hReady h
+    b <- hReady h `catch` const (return False)
     if b then do
       x <- receiveOne h
       xs <- receive h
