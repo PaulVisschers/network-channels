@@ -13,5 +13,6 @@ Library
   Build-Depends:     base >= 4, monads-fd, network, containers
   Exposed-Modules:   Network.Channel.Client
                      Network.Channel.Server
+                     Network.Channel.Client.Trans
                      Network.Channel.Server.Trans
   Other-Modules:     Network.Channel.Raw
